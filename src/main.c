@@ -12,6 +12,7 @@
 
 #include <protocol.h>
 #include <tone.h>
+#include <indicator.h>
 
 int main(void)
 {
@@ -22,7 +23,9 @@ int main(void)
     SerialPort_Init();
 
     sei();
+    Time_WaitMs(500);
     SerialPort_PrintString("Hellow, Sir!\n");
+    Led_SetColor(LedColor_Green);
 
     for (;;) {
         if (SerialPort_LineReceived()) {
@@ -31,6 +34,7 @@ int main(void)
             struct Response response;
 
             SerialPort_ReadLine(line);
+            SerialPort_Flush();
             Protocol_ParseRequest(line, &request);
             
             if (request.type == RequestType_Undefined) {
@@ -42,14 +46,14 @@ int main(void)
             SerialPort_PrintString(line);
 
             switch (request.type) {
-                default: break;
+                case RequestType_Undefined:
+                    Tone_Stop();
+                    Indicator_ShowBadRequest();
+                    Time_WaitMs(500);
+                    break;
 
                 case RequestType_SetVolume:
-                    if (request.content.volumeRaised) {
-                        Buzzer_EnableTurbo();
-                    } else {
-                        Buzzer_DisableTurbo();
-                    }
+                    Buzzer_SetRaisedVolumeMode(request.content.volumeRaised);
                     break;
 
                 case RequestType_PlayFiniteTone:
@@ -68,18 +72,17 @@ int main(void)
                     Tone_Stop();
                     break;
             }
-            
         }
+
         if (Button_PressDetected()) {
-            if (Tone_IsPlaying()) {
+            if (Tone_GetStatus()) {
                 Tone_Stop();
             } else {
-                if (Buzzer_TurboEnabled()) {
-                    Buzzer_DisableTurbo();
-                } else {
-                    Buzzer_EnableTurbo();
-                }
+                Buzzer_ToggleVolumeMode();
             }
         }
+
+        Tone_Update();
+        Indicator_Update();
     }
 }

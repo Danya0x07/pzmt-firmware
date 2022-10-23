@@ -1,12 +1,12 @@
 #include <boardconf.h>
 #include <buzzer.h>
 
-static bool turboEnabled = false;
+static bool volumeRaised = false;
 
 static inline void timer1Start(uint8_t prescaler)
 {
     TCCR1A = _BV(COM1A1) | _BV(COM1A0) | _BV(WGM11);
-    if (turboEnabled)
+    if (volumeRaised)
         TCCR1A |= _BV(COM1B1);
     TCCR1B = _BV(WGM13) | _BV(WGM12) | (prescaler & 0b111);
 }
@@ -49,17 +49,17 @@ void Buzzer_Off(void)
     timer1Stop();
 }
 
-void Buzzer_EnableTurbo(void)
+void Buzzer_SetRaisedVolumeMode(bool raised)
 {
-    turboEnabled = true;
+    volumeRaised = raised;
 }
 
-void Buzzer_DisableTurbo(void)
+void Buzzer_ToggleVolumeMode(void)
 {
-    turboEnabled = false;
+    volumeRaised = !volumeRaised;
 }
 
-bool Buzzer_TurboEnabled(void)
+bool Buzzer_VolumeRaised(void)
 {
-    return turboEnabled;
+    return volumeRaised;
 }

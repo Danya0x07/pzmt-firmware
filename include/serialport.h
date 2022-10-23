@@ -10,5 +10,6 @@ void SerialPort_PrintDecimal(int16_t n);
 char SerialPort_ReadChar(void);
 bool SerialPort_LineReceived(void);
 uint8_t SerialPort_ReadLine(char *buff);
+void SerialPort_Flush(void);
 
 #endif // _SERIALPORT_H

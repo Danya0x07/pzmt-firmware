@@ -4,7 +4,7 @@
 
 static uint32_t timeMarker = 0;
 static uint16_t timeout;
-static bool playing = false;
+static ToneStatus_t status = ToneStatus_Idle;
 
 static void _StartDurationTimeout(uint16_t duration)
 {
@@ -16,25 +16,26 @@ void Tone_PlayFinite(uint16_t frequency, uint16_t duration)
 {
     Buzzer_SetFrequency(frequency);
     _StartDurationTimeout(duration);
-    playing = true;
+    status = ToneStatus_Finite;
 }
 
 void Tone_PlayInfinite(uint16_t frequency)
 {
     Buzzer_SetFrequency(frequency);
-    playing = true;
+    status = ToneStatus_Infinite;
 }
 
 void Tone_PlayEmpty(uint16_t duration)
 {
     Buzzer_Off();
     _StartDurationTimeout(duration);
-    playing = true;
+    status = ToneStatus_Finite;
 }
 
 void Tone_Update(void)
 {
-    if (Time_MsPassed() - timeMarker >= timeout) {
+    if (status == ToneStatus_Finite && 
+            Time_MsPassed() - timeMarker >= timeout) {
         Tone_Stop();
     }
 }
@@ -42,10 +43,10 @@ void Tone_Update(void)
 void Tone_Stop(void)
 {
     Buzzer_Off();
-    playing = false;
+    status = ToneStatus_Idle;
 }
 
-bool Tone_IsPlaying(void)
+ToneStatus_t Tone_GetStatus(void)
 {
-    return playing;
+    return status;
 }

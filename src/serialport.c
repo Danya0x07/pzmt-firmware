@@ -25,12 +25,6 @@ static char _PeekFirst(void)
     return empty ? 0 : rxBuffer[readIndex];
 }
 
-void _FlushInputBuffer(void)
-{
-    memset(rxBuffer, 0, sizeof(rxBuffer));
-    empty = true;
-}
-
 ISR(USART_RX_vect)
 {
     rxBuffer[writeIndex++] = UDR;
@@ -95,4 +89,11 @@ uint8_t SerialPort_ReadLine(char *buff)
     }
     *buff = '\0';
     return len;
+}
+
+void SerialPort_Flush(void)
+{
+    memset(rxBuffer, 0, sizeof(rxBuffer));
+    readIndex = writeIndex = 0;
+    empty = true;
 }
