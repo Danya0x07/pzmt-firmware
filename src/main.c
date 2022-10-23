@@ -10,6 +10,9 @@
 #include <time.h>
 #include <serialport.h>
 
+#include <protocol.h>
+#include <tone.h>
+
 int main(void)
 {
     Time_Init();
@@ -17,7 +20,6 @@ int main(void)
     Button_Init();
     Buzzer_Init();
     SerialPort_Init();
-    uint16_t frequency = 0, duration = 0;
 
     sei();
     SerialPort_PrintString("Hellow, Sir!\n");
@@ -25,41 +27,56 @@ int main(void)
     for (;;) {
         if (SerialPort_LineReceived()) {
             char line[16];
+            struct Request request;
+            struct Response response;
+
             SerialPort_ReadLine(line);
-            SerialPort_PrintString(line);
-            char *p = strtok(line, ",");
-            if (p) {
-                frequency = atoi(p);
-                p = strtok(NULL, ",");
-                if (p)
-                    duration = atoi(p);
-            }
-            if (duration == 0) {
-                Buzzer_Off();
-                Led_SetColor(LedColor_None);
-            } else if (frequency == 0) {
-                Buzzer_Off();
-                Time_WaitMs(duration);
-                Led_SetColor(LedColor_Red);
+            Protocol_ParseRequest(line, &request);
+            
+            if (request.type == RequestType_Undefined) {
+                response.type = ResponseType_BadRequest;
             } else {
-                Led_SetColor(LedColor_Blue);
-                Buzzer_SetFrequency(frequency);
-                Time_WaitMs(duration);
-                Buzzer_Off();
-                Led_SetColor(LedColor_None);
+                response.type = ResponseType_Acknowledge;
             }
+            Protocol_BuildResponse(&response, line);
+            SerialPort_PrintString(line);
+
+            switch (request.type) {
+                default: break;
+
+                case RequestType_SetVolume:
+                    if (request.content.volumeRaised) {
+                        Buzzer_EnableTurbo();
+                    } else {
+                        Buzzer_DisableTurbo();
+                    }
+                    break;
+
+                case RequestType_PlayFiniteTone:
+                    Tone_PlayFinite(request.content.frequency, request.content.duration);
+                    break;
+                
+                case RequestType_PlayEmptyFiniteTone:
+                    Tone_PlayEmpty(request.content.duration);
+                    break;
+                
+                case RequestType_PlayInfiniteTone:
+                    Tone_PlayInfinite(request.content.frequency);
+                    break;
+
+                case RequestType_StopPlaying:
+                    Tone_Stop();
+                    break;
+            }
+            
         }
         if (Button_PressDetected()) {
-            SerialPort_PrintString("Hellow, Sir!\n");
-            if (Button_PressDetectedAgain()) {
-                Buzzer_SetFrequency(300);
-                Time_WaitMs(1000);
+            if (Tone_IsPlaying()) {
+                Tone_Stop();
             } else {
                 if (Buzzer_TurboEnabled()) {
-                    Led_SetColor(LedColor_Yellow);
                     Buzzer_DisableTurbo();
                 } else {
-                    Led_SetColor(LedColor_Purple);
                     Buzzer_EnableTurbo();
                 }
             }
