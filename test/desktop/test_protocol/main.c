@@ -80,6 +80,20 @@ void Test_StopToneRequest(void)
     TEST_ASSERT_EQUAL(0, request.content.duration);
 }
 
+void Test_ResponseBuilding(void)
+{
+    struct Response response;
+    char buff[16];
+
+    response.type = ResponseType_BadRequest;
+    Protocol_BuildResponse(&response, buff);
+    TEST_ASSERT_EQUAL_STRING("1\n", buff);
+
+    response.type = ResponseType_Acknowledge;
+    Protocol_BuildResponse(&response, buff);
+    TEST_ASSERT_EQUAL_STRING("0\n", buff);
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -88,5 +102,6 @@ int main(void)
     RUN_TEST(Test_FiniteToneRequest);
     RUN_TEST(Test_InfiniteToneRequest);
     RUN_TEST(Test_StopToneRequest);
+    RUN_TEST(Test_ResponseBuilding);
     return UNITY_END();
 }
