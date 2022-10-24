@@ -7,20 +7,17 @@ enum RequestType {
     RequestType_Undefined,
     RequestType_SetVolume,
     RequestType_PlayFiniteTone,
-    RequestType_PlayEmptyFiniteTone,
     RequestType_PlayInfiniteTone,
     RequestType_StopPlaying
-};
-
-struct ToneParams {
-    uint16_t frequency;
-    uint16_t duration;
 };
 
 struct Request {
     enum RequestType type;
     union {
-        struct ToneParams;
+        struct {
+            uint16_t frequency;
+            uint16_t duration;
+        };
         bool volumeRaised;
     } content;
 };

@@ -13,7 +13,6 @@ typedef enum ToneStatus {
 
 void Tone_PlayFinite(uint16_t frequency, uint16_t duration);
 void Tone_PlayInfinite(uint16_t frequency);
-void Tone_PlayEmpty(uint16_t duration);
 void Tone_Update(void);
 void Tone_Stop(void);
 ToneStatus_t Tone_GetStatus(void);

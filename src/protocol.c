@@ -40,9 +40,6 @@ void Protocol_ParseRequest(char *line, struct Request *request)
         else if (duration == 0) {
             request->type = frequency == 0 ? RequestType_StopPlaying : RequestType_PlayInfiniteTone;
         }
-        else if (frequency == 0) {
-            request->type = RequestType_PlayEmptyFiniteTone;
-        }
         request->content.frequency = frequency;
         request->content.duration = duration;
     }    

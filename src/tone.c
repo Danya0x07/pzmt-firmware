@@ -14,7 +14,10 @@ static void _StartDurationTimeout(uint16_t duration)
 
 void Tone_PlayFinite(uint16_t frequency, uint16_t duration)
 {
-    Buzzer_SetFrequency(frequency);
+    if (frequency)
+        Buzzer_SetFrequency(frequency);
+    else
+        Buzzer_Off();
     _StartDurationTimeout(duration);
     status = ToneStatus_Finite;
 }
@@ -23,13 +26,6 @@ void Tone_PlayInfinite(uint16_t frequency)
 {
     Buzzer_SetFrequency(frequency);
     status = ToneStatus_Infinite;
-}
-
-void Tone_PlayEmpty(uint16_t duration)
-{
-    Buzzer_Off();
-    _StartDurationTimeout(duration);
-    status = ToneStatus_Finite;
 }
 
 void Tone_Update(void)

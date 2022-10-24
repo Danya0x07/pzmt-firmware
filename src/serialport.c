@@ -3,33 +3,42 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <serialport.h>
-#include <cbuffer.h>
 
-static char memblock[16];
-static struct CircularBuffer buffer = {
-    .memblock = memblock, .elementSize = 1, .len = sizeof(memblock)
-};
+static char rxBuffer[0x10] = {0};
+#define INDEX_MASK  (sizeof(rxBuffer) - 1)
 
-static char _PeekNewest(void)
+static volatile uint8_t count = 0;
+static volatile uint8_t writeIndex = 0;
+static uint8_t readIndex = 0;
+
+static inline bool _BufferEmpty(void)
 {
-    char c = '\0';
-
-    CircularBuffer_PeekNewest(&buffer, &c);
-    return c;
+    return count == 0;
 }
 
-static char _PeekOldest(void)
+static inline bool _BufferFull(void)
 {
-    char c = '\0';
+    return count == sizeof(rxBuffer);
+}
 
-    CircularBuffer_PeekOldest(&buffer, &c);
-    return c;
+static char _PeekLast(void)
+{
+    if (_BufferEmpty())
+        return 0;
+
+    uint8_t idx = (writeIndex - 1) & INDEX_MASK;
+    return rxBuffer[idx];
 }
 
 ISR(USART_RX_vect)
 {
-    uint8_t byte = UDR;
-    CircularBuffer_Add(&buffer, &byte);
+    if (!_BufferFull()) {
+        rxBuffer[writeIndex++] = UDR;
+        writeIndex &= INDEX_MASK;
+        count++;
+    } else {
+        (void)UDR;
+    }
 }
 
 void SerialPort_Init(void)
@@ -54,22 +63,25 @@ void SerialPort_PrintString(const char *str)
 
 void SerialPort_PrintDecimal(int16_t n)
 {
-    SerialPort_PrintString(itoa(n, memblock, 10));
+    SerialPort_PrintString(itoa(n, rxBuffer, 10));
+    SerialPort_Flush();
 }
 
 char SerialPort_ReadChar(void)
 {
-    char c;
-
-    if (CircularBuffer_Get(&buffer, &c) < 0)
-        return 0;
+    if (_BufferEmpty())
+        return '\0';
+    
+    char c = rxBuffer[readIndex++];
+    readIndex &= INDEX_MASK;
+    count--;
 
     return c;
 }
 
 bool SerialPort_LineReceived(void)
 {
-    return _PeekNewest() == '\n';
+    return _PeekLast() == '\n';
 }
 
 uint8_t SerialPort_ReadLine(char *buff)
@@ -91,5 +103,6 @@ uint8_t SerialPort_ReadLine(char *buff)
 
 void SerialPort_Flush(void)
 {
-    CircularBuffer_Reset(&buffer);
+    memset(rxBuffer, 0, sizeof(rxBuffer));
+    readIndex = writeIndex = count = 0;
 }
