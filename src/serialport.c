@@ -3,33 +3,33 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <serialport.h>
+#include <cbuffer.h>
 
-static char rxBuffer[0x10] = {0};  // 16 bytes buffer, index mask 0xF
-static volatile bool empty = true;
-static volatile uint8_t writeIndex = 0;
-static uint8_t readIndex = 0;
+static char memblock[16];
+static struct CircularBuffer buffer = {
+    .memblock = memblock, .elementSize = 1, .len = sizeof(memblock)
+};
 
-static char numBuffer[8];
-
-static char _PeekLast(void)
+static char _PeekNewest(void)
 {
-    if (empty)
-        return 0;
+    char c = '\0';
 
-    uint8_t idx = (writeIndex - 1) & 0xF;
-    return rxBuffer[idx];
+    CircularBuffer_PeekNewest(&buffer, &c);
+    return c;
 }
 
-static char _PeekFirst(void)
+static char _PeekOldest(void)
 {
-    return empty ? 0 : rxBuffer[readIndex];
+    char c = '\0';
+
+    CircularBuffer_PeekOldest(&buffer, &c);
+    return c;
 }
 
 ISR(USART_RX_vect)
 {
-    rxBuffer[writeIndex++] = UDR;
-    writeIndex &= 0xF;
-    empty = false;
+    uint8_t byte = UDR;
+    CircularBuffer_Add(&buffer, &byte);
 }
 
 void SerialPort_Init(void)
@@ -54,24 +54,22 @@ void SerialPort_PrintString(const char *str)
 
 void SerialPort_PrintDecimal(int16_t n)
 {
-    SerialPort_PrintString(itoa(n, numBuffer, 10));
+    SerialPort_PrintString(itoa(n, memblock, 10));
 }
 
 char SerialPort_ReadChar(void)
 {
-    if (empty)
-        return '\0';
-    
-    char c = rxBuffer[readIndex++];
-    readIndex &= 0xF;
-    if (readIndex == writeIndex)
-        empty = true;
+    char c;
+
+    if (CircularBuffer_Get(&buffer, &c) < 0)
+        return 0;
+
     return c;
 }
 
 bool SerialPort_LineReceived(void)
 {
-    return _PeekLast() == '\n';
+    return _PeekNewest() == '\n';
 }
 
 uint8_t SerialPort_ReadLine(char *buff)
@@ -93,7 +91,5 @@ uint8_t SerialPort_ReadLine(char *buff)
 
 void SerialPort_Flush(void)
 {
-    memset(rxBuffer, 0, sizeof(rxBuffer));
-    readIndex = writeIndex = 0;
-    empty = true;
+    CircularBuffer_Reset(&buffer);
 }

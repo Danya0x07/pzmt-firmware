@@ -15,7 +15,7 @@ struct CircularBuffer {
     void *const memblock;
     const uint8_t elementSize;
     const uint8_t len;
-    uint8_t _writeIndex;
+    volatile uint8_t _writeIndex;
     uint8_t _readIndex;
     uint8_t _count;
 };
