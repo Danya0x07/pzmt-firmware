@@ -75,7 +75,7 @@ int main(void)
         }
 
         if (Button_PressDetected()) {
-            if (Tone_GetStatus()) {
+            if (Tone_GetStatus() != ToneStatus_Idle) {
                 Tone_Stop();
             } else {
                 Buzzer_ToggleVolumeMode();
