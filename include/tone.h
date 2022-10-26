@@ -3,18 +3,23 @@
 
 #include <main.h>
 
-typedef enum ToneStatus {
-    ToneStatus_Idle,
-    ToneStatus_Finite,
-    ToneStatus_Infinite,
+typedef enum {
+    ToneRoutine_IDLE,
+    ToneRoutine_FINITE,
+    ToneRoutine_INFINITE,
 
-    NumOfToneStatuses
-} ToneStatus_t;
+    NUM_OF_TONE_ROUTINES
+} ToneRoutine_t;
 
-void Tone_PlayFinite(uint16_t frequency, uint16_t duration);
+struct FiniteTone {
+    uint16_t frequency;
+    uint16_t duration;
+};
+
+void Tone_PlayFinite(struct FiniteTone finiteTone);
 void Tone_PlayInfinite(uint16_t frequency);
 void Tone_Update(void);
 void Tone_Stop(void);
-ToneStatus_t Tone_GetStatus(void);
+ToneRoutine_t Tone_GetRoutine(void);
 
 #endif // _TONE_H

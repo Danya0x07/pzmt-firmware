@@ -5,49 +5,50 @@
 #define MAX_SUPPORTED_FREQUENCY 20000
 #define MAX_SUPPORTED_DURATION 20000
 
-static enum RequestType _ParseRequestType(char firstChar)
+static CommandType_t ParseCommandType(char firstChar)
 {
     if (firstChar >= '0' && firstChar <= '9') {
-        return RequestType_PlayFiniteTone;
+        return CommandType_PLAY_FINITE_TONE;
     }
     switch (firstChar) {
         case 'v':
         case 'V':
-            return RequestType_SetVolume;
+            return CommandType_SET_VOLUME;
         default:
-            return RequestType_Undefined;
+            return CommandType_UNRECOGNIZABLE;
     }
 }
 
-void Protocol_ParseRequest(char *line, struct Request *request)
+void Protocol_ParseCommand(char *line, struct Command *cmd)
 {
     uint16_t frequency = 0, duration = 0;
 
-    request->type = _ParseRequestType(line[0]);
+    cmd->type = ParseCommandType(line[0]);
 
-    if (request->type == RequestType_SetVolume) {
-        request->content.volumeRaised = line[0] == 'V';
+    if (cmd->type == CommandType_SET_VOLUME) {
+        cmd->params.volumeRaised = line[0] == 'V';
     }
-    else if (request->type == RequestType_PlayFiniteTone) {
+    else if (cmd->type == CommandType_PLAY_FINITE_TONE) {
         frequency = atoi(line);
         line = strchr(line, ',');
         if (line) {
             duration = atoi(++line);
         }
         if (frequency > MAX_SUPPORTED_FREQUENCY || duration > MAX_SUPPORTED_DURATION) {
-            request->type = RequestType_Undefined;
+            cmd->type = CommandType_UNRECOGNIZABLE;
         }
         else if (duration == 0) {
-            request->type = frequency == 0 ? RequestType_StopPlaying : RequestType_PlayInfiniteTone;
+            cmd->type = frequency == 0 ? 
+                CommandType_STOP_PLAYING : CommandType_PLAY_INFINITE_TONE;
         }
-        request->content.frequency = frequency;
-        request->content.duration = duration;
+        cmd->params.frequency = frequency;
+        cmd->params.duration = duration;
     }    
 }
 
-void Protocol_BuildResponse(struct Response *response, char *buff)
+void Protocol_BuildReply(struct Reply *response, char *buff)
 {
-    buff[0] = response->type == ResponseType_Acknowledge ? '0' : '1';
+    buff[0] = response->code == ReplyCode_OK ? '0' : '1';
     buff[1] = '\n';
     buff[2] = '\0';
 }

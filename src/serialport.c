@@ -11,19 +11,19 @@ static volatile uint8_t count = 0;
 static volatile uint8_t writeIndex = 0;
 static uint8_t readIndex = 0;
 
-static inline bool _BufferEmpty(void)
+static inline bool BufferEmpty(void)
 {
     return count == 0;
 }
 
-static inline bool _BufferFull(void)
+static inline bool BufferFull(void)
 {
     return count == sizeof(rxBuffer);
 }
 
-static char _PeekLast(void)
+static char PeekLast(void)
 {
-    if (_BufferEmpty())
+    if (BufferEmpty())
         return 0;
 
     uint8_t idx = (writeIndex - 1) & INDEX_MASK;
@@ -32,7 +32,7 @@ static char _PeekLast(void)
 
 ISR(USART_RX_vect)
 {
-    if (!_BufferFull()) {
+    if (!BufferFull()) {
         rxBuffer[writeIndex++] = UDR;
         writeIndex &= INDEX_MASK;
         count++;
@@ -69,7 +69,7 @@ void SerialPort_PrintDecimal(int16_t n)
 
 char SerialPort_ReadChar(void)
 {
-    if (_BufferEmpty())
+    if (BufferEmpty())
         return '\0';
     
     char c = rxBuffer[readIndex++];
@@ -81,7 +81,7 @@ char SerialPort_ReadChar(void)
 
 bool SerialPort_LineReceived(void)
 {
-    return _PeekLast() == '\n';
+    return PeekLast() == '\n';
 }
 
 uint8_t SerialPort_ReadLine(char *buff)

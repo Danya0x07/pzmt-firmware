@@ -4,33 +4,33 @@
 
 static uint32_t timeMarker = 0;
 static uint16_t timeout;
-static ToneStatus_t status = ToneStatus_Idle;
+static ToneRoutine_t routine = ToneRoutine_IDLE;
 
-static void _StartDurationTimeout(uint16_t duration)
+static void StartDurationTimeout(uint16_t duration)
 {
     timeMarker = Time_MsPassed();
     timeout = duration;
 }
 
-void Tone_PlayFinite(uint16_t frequency, uint16_t duration)
+void Tone_PlayFinite(struct FiniteTone finiteTone)
 {
-    if (frequency)
-        Buzzer_SetFrequency(frequency);
+    if (finiteTone.frequency)
+        Buzzer_SetFrequency(finiteTone.frequency);
     else
         Buzzer_Off();
-    _StartDurationTimeout(duration);
-    status = ToneStatus_Finite;
+    StartDurationTimeout(finiteTone.duration);
+    routine = ToneRoutine_FINITE;
 }
 
 void Tone_PlayInfinite(uint16_t frequency)
 {
     Buzzer_SetFrequency(frequency);
-    status = ToneStatus_Infinite;
+    routine = ToneRoutine_INFINITE;
 }
 
 void Tone_Update(void)
 {
-    if (status == ToneStatus_Finite && 
+    if (routine == ToneRoutine_FINITE && 
             Time_MsPassed() - timeMarker >= timeout) {
         Tone_Stop();
     }
@@ -39,10 +39,10 @@ void Tone_Update(void)
 void Tone_Stop(void)
 {
     Buzzer_Off();
-    status = ToneStatus_Idle;
+    routine = ToneRoutine_IDLE;
 }
 
-ToneStatus_t Tone_GetStatus(void)
+ToneRoutine_t Tone_GetRoutine(void)
 {
-    return status;
+    return routine;
 }

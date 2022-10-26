@@ -2,8 +2,8 @@
 #include <avr/interrupt.h>
 #include <time.h>
 
-#define timer0_InterruptOff()   (TIMSK &= ~_BV(OCIE0A))
-#define timer0_InterruptOn()    (TIMSK |= _BV(OCIE0A))
+#define TIMER0_INTERRUPT_OFF()   (TIMSK &= ~_BV(OCIE0A))
+#define TIMER0_INTERRUPT_ON()    (TIMSK |= _BV(OCIE0A))
 
 static uint32_t millisecondsPassed = 0;
 
@@ -12,7 +12,7 @@ void Time_Init(void)
     TCCR0A = _BV(WGM01);
     TCCR0B = _BV(CS01) | _BV(CS00);  // prescaler 64
     OCR0A = 124;
-    timer0_InterruptOn();
+    TIMER0_INTERRUPT_ON();
 }
 
 ISR(TIMER0_COMPA_vect)
@@ -22,9 +22,9 @@ ISR(TIMER0_COMPA_vect)
 
 uint32_t Time_MsPassed(void)
 {
-    timer0_InterruptOff();
+    TIMER0_INTERRUPT_OFF();
     uint32_t ms = millisecondsPassed;
-    timer0_InterruptOn();
+    TIMER0_INTERRUPT_ON();
     return ms;
 }
 

@@ -3,7 +3,7 @@
 
 #include <main.h>
 
-void Indicator_ShowBadRequest(void);
+void Indicator_OnWrongCmd(void);
 void Indicator_Update(void);
 
 #endif // _INDICATOR_H

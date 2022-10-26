@@ -12,7 +12,7 @@
 
 #include <protocol.h>
 #include <tone.h>
-#include <ftq.h>
+#include <playback.h>
 #include <indicator.h>
 
 int main(void)
@@ -26,86 +26,83 @@ int main(void)
     sei();
     Time_WaitMs(500);
     SerialPort_PrintChar('H');
-    Led_SetColor(LedColor_Green);
+    Led_SetColor(LedColor_GREEN);
 
     for (;;) {
         if (SerialPort_LineReceived()) {
             char line[16];
-            struct Request request;
+            struct Command cmd;
 
             SerialPort_ReadLine(line);
             SerialPort_Flush();
-            Protocol_ParseRequest(line, &request);
+            Protocol_ParseCommand(line, &cmd);
 
-            struct Response response;
+            struct Reply reply;
 
-            switch (request.type) {
-                case RequestType_Undefined:
+            switch (cmd.type) {
+                default:
+                case CommandType_UNRECOGNIZABLE:
                     Tone_Stop();
-                    Indicator_ShowBadRequest();
+                    Indicator_OnWrongCmd();
                     Time_WaitMs(500);
-                    response.type = ResponseType_BadRequest;
-                    Protocol_BuildResponse(&response, line);
+                    reply.code = ReplyCode_WRONG_CMD;
+                    Protocol_BuildReply(&reply, line);
                     SerialPort_PrintString(line);
                     break;
 
-                case RequestType_SetVolume:
-                    Buzzer_SetRaisedVolumeMode(request.content.volumeRaised);
-                    response.type = ResponseType_Acknowledge;
-                    Protocol_BuildResponse(&response, line);
+                case CommandType_SET_VOLUME:
+                    Buzzer_SetRaisedVolumeMode(cmd.params.volumeRaised);
+                    reply.code = ReplyCode_OK;
+                    Protocol_BuildReply(&reply, line);
                     SerialPort_PrintString(line);
                     break;
 
-                case RequestType_PlayFiniteTone:
-                    if (Ft_QueueFull()) {
-                        response.type = ResponseType_BadRequest;
-                        Protocol_BuildResponse(&response, line);
+                case CommandType_PLAY_FINITE_TONE:
+                    if (Playback_QueueFull()) {
+                        reply.code = ReplyCode_WRONG_CMD;
+                        Protocol_BuildReply(&reply, line);
                         SerialPort_PrintString(line);
                     }
                     else {
-                        Ft_Enqueue((struct FiniteTone) {
-                            .frequency = request.content.frequency, 
-                            .duration = request.content.duration
+                        Playback_Enqueue((struct FiniteTone) {
+                            .frequency = cmd.params.frequency, 
+                            .duration = cmd.params.duration
                         });
                     }
                     break;
                 
-                case RequestType_PlayInfiniteTone:
-                    Tone_PlayInfinite(request.content.frequency);
-                    response.type = ResponseType_Acknowledge;
-                    Protocol_BuildResponse(&response, line);
+                case CommandType_PLAY_INFINITE_TONE:
+                    Tone_PlayInfinite(cmd.params.frequency);
+                    reply.code = ReplyCode_OK;
+                    Protocol_BuildReply(&reply, line);
                     SerialPort_PrintString(line);
                     break;
 
-                case RequestType_StopPlaying:
+                case CommandType_STOP_PLAYING:
                     Tone_Stop();
-                    response.type = ResponseType_Acknowledge;
-                    Protocol_BuildResponse(&response, line);
+                    reply.code = ReplyCode_OK;
+                    Protocol_BuildReply(&reply, line);
                     SerialPort_PrintString(line);
                     break;
             }
         }
 
-        if (Tone_GetStatus() != ToneStatus_Finite && !Ft_QueueEmpty()) {
-            struct FiniteTone finiteTone = Ft_Dequeue();
-            Tone_PlayFinite(finiteTone.frequency, finiteTone.duration);
-            SerialPort_PrintDecimal(finiteTone.frequency);
-            SerialPort_PrintChar('\t');
-            SerialPort_PrintDecimal(finiteTone.duration);
-            SerialPort_PrintChar('\n');
-            if (!Ft_QueueFull()) {
-                struct Response response;
+        if (Tone_GetRoutine() != ToneRoutine_FINITE && !Playback_QueueEmpty()) {
+            struct FiniteTone finiteTone = Playback_Dequeue();
+            Tone_PlayFinite(finiteTone);
+            if (!Playback_QueueFull()) {
+                struct Reply reply;
                 char line[4];
-                response.type = ResponseType_Acknowledge;
-                Protocol_BuildResponse(&response, line);
+                reply.code = ReplyCode_OK;
+                Protocol_BuildReply(&reply, line);
                 SerialPort_PrintString(line);
             }
         }
 
         if (Button_PressDetected()) {
-            if (Tone_GetStatus() != ToneStatus_Idle) {
+            if (Tone_GetRoutine() != ToneRoutine_IDLE) {
                 Tone_Stop();
-                Ft_ResetQueue();
+                Playback_ResetQueue();
             } else {
                 Buzzer_ToggleVolumeMode();
             }

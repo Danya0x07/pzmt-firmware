@@ -3,35 +3,41 @@
 
 #include <main.h>
 
-enum RequestType {
-    RequestType_Undefined,
-    RequestType_SetVolume,
-    RequestType_PlayFiniteTone,
-    RequestType_PlayInfiniteTone,
-    RequestType_StopPlaying
-};
+typedef enum {
+    CommandType_UNRECOGNIZABLE,
+    CommandType_SET_VOLUME,
+    CommandType_PLAY_FINITE_TONE,
+    CommandType_PLAY_INFINITE_TONE,
+    CommandType_STOP_PLAYING,
 
-struct Request {
-    enum RequestType type;
+    NUM_OF_COMMAND_TYPES
+} CommandType_t;
+
+struct Command {
+    CommandType_t type;
     union {
         struct {
             uint16_t frequency;
             uint16_t duration;
         };
         bool volumeRaised;
-    } content;
+    } params;
 };
 
-enum ResponseType {
-    ResponseType_BadRequest,
-    ResponseType_Acknowledge
+typedef enum {
+    ReplyCode_WRONG_CMD,
+    ReplyCode_OK,
+    ReplyCode_READY,
+    ReplyCode_BUSY,
+
+    NUM_OF_REPLY_CODES
+} ReplyCode_t;
+
+struct Reply {
+    ReplyCode_t code;
 };
 
-struct Response {
-    enum ResponseType type;
-};
-
-void Protocol_ParseRequest(char *line, struct Request *request);
-void Protocol_BuildResponse(struct Response *response, char *buff);
+void Protocol_ParseCommand(char *line, struct Command *cmd);
+void Protocol_BuildReply(struct Reply *reply, char *buff);
 
 #endif // _PROTOCOL_H
