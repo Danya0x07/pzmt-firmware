@@ -37,7 +37,6 @@ struct Reply {
     ReplyCode_t code;
 };
 
-void Protocol_BuildStartupMsg(char *buff);
 void Protocol_ParseCommand(char *line, struct Command *cmd);
 void Protocol_BuildReply(const struct Reply *reply, char *buff);
 

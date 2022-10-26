@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/pgmspace.h>
 
 #include <led.h>
 #include <button.h>
@@ -17,6 +17,9 @@
 
 #define STARTUP_DELAY   700
 #define ERROR_DELAY     1000
+
+static const PROGMEM char STARTUP_MSG1[] =   "(C) MeanderSounds 2022\n";
+static const PROGMEM char STARTUP_MSG2[] =   "PzMt Firmware v" FIRMWARE_VERSION "\n";
 
 static void SendStartupMessage(void);
 static void SendReply(ReplyCode_t replyCode);
@@ -38,20 +41,25 @@ int main(void)
     for (;;) {
         if (SerialPort_PacketReceived()) {
             struct Command cmd;
-
             ReadCommand(&cmd);
+
             switch (cmd.type) {
                 default:
                 case CommandType_UNRECOGNIZABLE:
                     Tone_Stop();
+                    Playback_ResetQueue();
                     SendReply(ReplyCode_WRONG_CMD);
                     Indicator_OnWrongCmd();
                     Time_WaitMs(ERROR_DELAY);
                     break;
 
                 case CommandType_SET_VOLUME:
-                    Buzzer_SetRaisedVolumeMode(cmd.params.volumeRaised);
-                    SendReply(ReplyCode_OK);
+                    if (Tone_GetRoutine() == ToneRoutine_IDLE) {
+                        Buzzer_SetRaisedVolumeMode(cmd.params.volumeRaised);
+                        SendReply(ReplyCode_OK);
+                    } else {
+                        SendReply(ReplyCode_BUSY);
+                    }
                     break;
 
                 case CommandType_PLAY_FINITE_TONE:
@@ -103,9 +111,11 @@ int main(void)
 
 static void SendStartupMessage(void)
 {
-    char buff[32];
+    char buff[30];
 
-    Protocol_BuildStartupMsg(buff);
+    strcpy_P(buff, STARTUP_MSG1);
+    SerialPort_PrintString(buff);
+    strcpy_P(buff, STARTUP_MSG2);
     SerialPort_PrintString(buff);
 }
 
