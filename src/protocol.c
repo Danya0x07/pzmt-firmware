@@ -1,9 +1,16 @@
-#include <protocol.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_SUPPORTED_FREQUENCY 20000
-#define MAX_SUPPORTED_DURATION 20000
+#include <protocol.h>
+
+#ifndef PIO_UNIT_TESTING
+#   include <avr/pgmspace.h>
+#else
+#   define strcpy_P(dst, src) strcpy(dst, src)
+#   define PROGMEM
+#endif // PIO_UNIT_TESTING
+
+static const PROGMEM char STARTUP_MSG[] = "PzMt Firmware v" FIRMWARE_VERSION "\n";
 
 static CommandType_t ParseCommandType(char firstChar)
 {
@@ -17,6 +24,11 @@ static CommandType_t ParseCommandType(char firstChar)
         default:
             return CommandType_UNRECOGNIZABLE;
     }
+}
+
+void Protocol_BuildStartupMsg(char *buff)
+{
+    strcpy_P(buff, STARTUP_MSG);
 }
 
 void Protocol_ParseCommand(char *line, struct Command *cmd)
