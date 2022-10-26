@@ -26,7 +26,7 @@ int main(void)
     sei();
     Time_WaitMs(500);
     SerialPort_PrintChar('H');
-    Led_SetColor(LedColor_GREEN);
+    Indicator_OnStartup();
 
     for (;;) {
         if (SerialPort_PacketReceived()) {

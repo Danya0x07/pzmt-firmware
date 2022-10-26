@@ -16,6 +16,7 @@ typedef enum {
 
 void Led_Init(void);
 void Led_SetColor(LedColor_t color);
+LedColor_t Led_GetColor(void);
 void Led_Off(void);
 
 #endif // _BOARDCONF_H
