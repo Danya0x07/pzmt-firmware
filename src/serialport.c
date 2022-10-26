@@ -30,6 +30,11 @@ static char PeekLast(void)
     return rxBuffer[idx];
 }
 
+static inline bool IsPacketTerminator(char c)
+{
+    return c == '\n' || c == ' ';
+}
+
 ISR(USART_RX_vect)
 {
     if (!BufferFull()) {
@@ -79,24 +84,34 @@ char SerialPort_ReadChar(void)
     return c;
 }
 
-bool SerialPort_LineReceived(void)
+bool SerialPort_PacketReceived(void)
 {
-    return PeekLast() == '\n';
+    char last = PeekLast();
+
+    if (IsPacketTerminator(last))
+        return true;
+
+    if (BufferFull())
+        SerialPort_Flush();
+
+    return false;
 }
 
-uint8_t SerialPort_ReadLine(char *buff)
+uint8_t SerialPort_ReadPacket(char *buff)
 {
-    if (!SerialPort_LineReceived()) {
-        buff = NULL;
-        return 0;
-    }
-
     uint8_t len = 0;
-    char c;
-    while ((c = SerialPort_ReadChar()) != '\n') {
+    
+    if (!SerialPort_PacketReceived())
+        goto out;
+
+    char c = SerialPort_ReadChar();
+    while (!IsPacketTerminator(c)) {
         *buff++ = c;
         len++;
+        c = SerialPort_ReadChar();
     }
+
+out:
     *buff = '\0';
     return len;
 }

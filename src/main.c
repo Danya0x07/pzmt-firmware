@@ -29,11 +29,11 @@ int main(void)
     Led_SetColor(LedColor_GREEN);
 
     for (;;) {
-        if (SerialPort_LineReceived()) {
+        if (SerialPort_PacketReceived()) {
             char line[16];
             struct Command cmd;
 
-            SerialPort_ReadLine(line);
+            SerialPort_ReadPacket(line);
             SerialPort_Flush();
             Protocol_ParseCommand(line, &cmd);
 

@@ -8,8 +8,8 @@ void SerialPort_PrintChar(char c);
 void SerialPort_PrintString(const char *str);
 void SerialPort_PrintDecimal(int16_t n);
 char SerialPort_ReadChar(void);
-bool SerialPort_LineReceived(void);
-uint8_t SerialPort_ReadLine(char *buff);
+bool SerialPort_PacketReceived(void);
+uint8_t SerialPort_ReadPacket(char *buff);
 void SerialPort_Flush(void);
 
 #endif // _SERIALPORT_H
