@@ -46,9 +46,9 @@ void Protocol_ParseCommand(char *line, struct Command *cmd)
     }    
 }
 
-void Protocol_BuildReply(struct Reply *response, char *buff)
+void Protocol_BuildReply(const struct Reply *reply, char *buff)
 {
-    buff[0] = response->code == ReplyCode_OK ? '0' : '1';
+    buff[0] = (char)reply->code;
     buff[1] = '\n';
     buff[2] = '\0';
 }

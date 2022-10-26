@@ -25,10 +25,10 @@ struct Command {
 };
 
 typedef enum {
-    ReplyCode_WRONG_CMD,
-    ReplyCode_OK,
-    ReplyCode_READY,
-    ReplyCode_BUSY,
+    ReplyCode_WRONG_CMD = '0',
+    ReplyCode_OK = '1',
+    ReplyCode_READY = '2',
+    ReplyCode_BUSY = '3',
 
     NUM_OF_REPLY_CODES
 } ReplyCode_t;
@@ -38,6 +38,6 @@ struct Reply {
 };
 
 void Protocol_ParseCommand(char *line, struct Command *cmd);
-void Protocol_BuildReply(struct Reply *reply, char *buff);
+void Protocol_BuildReply(const struct Reply *reply, char *buff);
 
 #endif // _PROTOCOL_H
