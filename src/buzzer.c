@@ -5,6 +5,10 @@ static bool volumeRaised = false;
 
 static inline void StartSignal(uint8_t prescaler)
 {
+    /* Режим Fast PWM с верхней границей TOP == ICR1;
+     * CTC использовать не можем т.к. нам нужна генерация инвертированного
+     * меандра на втором выходе таймера, для режима повышенной громкости.
+     */
     TCCR1A = _BV(COM1A1) | _BV(COM1A0) | _BV(WGM11);
     if (volumeRaised)
         TCCR1A |= _BV(COM1B1);
@@ -40,7 +44,7 @@ void Buzzer_SetFrequency(uint16_t frequency)
 
     StopSignal();
     ICR1 = (uint16_t)regvalue;
-    OCR1A = OCR1B = (uint16_t)regvalue >> 1;
+    OCR1A = OCR1B = (uint16_t)regvalue >> 1;  // коэфф. заполнения 50% - всегда
     StartSignal(cs + 1);
 }
 

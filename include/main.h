@@ -1,3 +1,8 @@
+/*
+ *  Copyright (C) 2022 Danya0x07 & Room307
+ *      Проектная группа MeanderSounds
+ */
+
 #ifndef _MAIN_H
 #define _MAIN_H
 
