@@ -76,12 +76,14 @@ int main(void)
                     break;
                 
                 case CommandType_PLAY_INFINITE_TONE:
+                    Playback_ResetQueue();
                     Tone_PlayInfinite(cmd.params.frequency);
                     SendReply(ReplyCode_OK);
                     break;
 
                 case CommandType_STOP_PLAYING:
                     Tone_Stop();
+                    Playback_ResetQueue();
                     SendReply(ReplyCode_OK);
                     break;
             }
