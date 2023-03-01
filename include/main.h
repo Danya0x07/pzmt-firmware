@@ -10,7 +10,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#define FIRMWARE_VERSION    "1.1"
+#define FIRMWARE_VERSION    "1.2"
 
 #define MAX_SUPPORTED_FREQUENCY 20000
 #define MAX_SUPPORTED_DURATION  20000

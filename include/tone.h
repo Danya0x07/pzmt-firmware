@@ -3,7 +3,7 @@
 
 #include <main.h>
 
-typedef enum {
+typedef enum __attribute__((packed)) {
     ToneRoutine_IDLE,
     ToneRoutine_FINITE,
     ToneRoutine_INFINITE,

@@ -3,7 +3,7 @@
 
 #include <main.h>
 
-typedef enum {
+typedef enum __attribute__((packed)) {
     CommandType_UNRECOGNIZABLE,
     CommandType_SET_VOLUME,
     CommandType_PLAY_FINITE_TONE,
@@ -22,9 +22,9 @@ struct Command {
         };
         bool volumeRaised;
     } params;
-};
+} __attribute__((packed));
 
-typedef enum {
+typedef enum __attribute__((packed)) {
     ReplyCode_WRONG_CMD = '0',
     ReplyCode_OK = '1',
     ReplyCode_READY = '2',
@@ -35,7 +35,7 @@ typedef enum {
 
 struct Reply {
     ReplyCode_t code;
-};
+} __attribute__((packed));
 
 void Protocol_ParseCommand(char *line, struct Command *cmd);
 void Protocol_BuildReply(const struct Reply *reply, char *buff);

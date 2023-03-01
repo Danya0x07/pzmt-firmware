@@ -4,7 +4,10 @@
 #include <avr/interrupt.h>
 #include <serialport.h>
 
-static char rxBuffer[0x10] = {0};
+#define INTERRUPT_ON()  (UCSRB |= _BV(RXCIE))
+#define INTERRUPT_OFF() (UCSRB &= ~_BV(RXCIE))
+
+static volatile char rxBuffer[0x10] = {0};
 #define INDEX_MASK  (sizeof(rxBuffer) - 1)
 
 static volatile uint8_t count = 0;
@@ -66,14 +69,10 @@ void SerialPort_PrintString(const char *str)
         SerialPort_PrintChar(*str++);
 }
 
-void SerialPort_PrintDecimal(int16_t n)
-{
-    SerialPort_PrintString(itoa(n, rxBuffer, 10));
-    SerialPort_Flush();
-}
-
 char SerialPort_ReadChar(void)
 {
+    INTERRUPT_OFF();
+
     if (BufferEmpty())
         return '\0';
     
@@ -81,6 +80,7 @@ char SerialPort_ReadChar(void)
     readIndex &= INDEX_MASK;
     count--;
 
+    INTERRUPT_ON();
     return c;
 }
 
@@ -118,6 +118,7 @@ out:
 
 void SerialPort_Flush(void)
 {
-    memset(rxBuffer, 0, sizeof(rxBuffer));
+    INTERRUPT_OFF();
     readIndex = writeIndex = count = 0;
+    INTERRUPT_ON();
 }

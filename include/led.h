@@ -1,7 +1,7 @@
 #ifndef _LED_H
 #define _LED_H
 
-typedef enum {
+typedef enum __attribute__((packed)) {
     LedColor_NONE = 0, 
     LedColor_BLUE, 
     LedColor_GREEN, 
